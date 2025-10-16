@@ -1,4 +1,4 @@
-package com.fastcampus.ecommerce.controllers;
+package com.fastcampus.ecommerce.controller;
 
 import com.fastcampus.ecommerce.common.errors.BadRequestException;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
