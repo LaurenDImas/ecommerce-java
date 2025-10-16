@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductCategory {
-
     @EmbeddedId
     private ProductCategoryId id;
 
@@ -31,6 +30,7 @@ public class ProductCategory {
     private LocalDateTime updatedAt;
 
     @Embeddable
+    @Data
     public static class ProductCategoryId {
         @Column(name = "product_id")
         private Long productId;

@@ -16,7 +16,7 @@ CREATE TABLE categories (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP not null
+    updated_at TIMESTAMP null
 );
 
 -- Create product_categories junction table
@@ -24,7 +24,7 @@ CREATE TABLE product_categories (
     product_id BIGINT,
     category_id BIGINT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP not null,
+    updated_at TIMESTAMP null,
     PRIMARY KEY (product_id, category_id),
     FOREIGN KEY (product_id) REFERENCES products(product_id),
     FOREIGN KEY (category_id) REFERENCES categories(category_id)

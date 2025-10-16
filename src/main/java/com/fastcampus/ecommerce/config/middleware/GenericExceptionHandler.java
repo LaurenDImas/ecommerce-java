@@ -2,7 +2,7 @@ package com.fastcampus.ecommerce.config.middleware;
 
 import com.fastcampus.ecommerce.common.errors.BadRequestException;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
-import com.fastcampus.ecommerce.models.ErrorResponse;
+import com.fastcampus.ecommerce.model.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
