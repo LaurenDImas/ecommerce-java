@@ -7,7 +7,7 @@ CREATE TABLE products (
     stock_quantity INT NOT NULL,
     weight DECIMAL(10, 2) NOT NULL default 1000.0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP not null
+    updated_at TIMESTAMP null
 );
 
 -- Create categories table
