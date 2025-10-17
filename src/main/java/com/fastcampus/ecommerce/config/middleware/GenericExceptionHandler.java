@@ -1,8 +1,8 @@
 package com.fastcampus.ecommerce.config.middleware;
 
-import com.fastcampus.ecommerce.common.errors.BadRequestException;
-import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
+import com.fastcampus.ecommerce.common.errors.*;
 import com.fastcampus.ecommerce.model.ErrorResponse;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,11 @@ import java.util.Map;
 //@Order(Ordered.LOWEST_PRECEDENCE)
 //@Profile("development")
 public class GenericExceptionHandler{
-    @ExceptionHandler(ResourceNotFoundException.class)
+    @ExceptionHandler({
+            ResourceNotFoundException.class,
+            UserNotFoundException.class,
+            RoleNotFoundException.class,
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public @ResponseBody ErrorResponse handleResourceNotFoundException(HttpServletRequest req, ResourceNotFoundException exception) {
         return ErrorResponse.builder()
@@ -65,5 +69,30 @@ public class GenericExceptionHandler{
                 .errors(errors)
                 .timestamp(LocalDateTime.now())
                 .build();
+    }
+
+    @ExceptionHandler(InvalidPasswordException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public @ResponseBody ErrorResponse handleUnautorizedException(HttpServletRequest req, InvalidPasswordException exception){
+        return ErrorResponse.builder()
+                .code(HttpStatus.UNAUTHORIZED.value())
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+    }
+
+    @ExceptionHandler({
+            UsernameAlreadyExistsException.class,
+            EmailAlreadyExistsException.class
+    })
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public @ResponseBody ErrorResponse handleConflictException(HttpServletRequest req, Exception exception){
+        return ErrorResponse.builder()
+                .code(HttpStatus.CONFLICT.value())
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
     }
 }
