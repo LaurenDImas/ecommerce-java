@@ -15,7 +15,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query(value = """
         SELECT r.* FROM roles r
-        JOIN user_roles ur ON r.id = ur.role_id
+        JOIN user_roles ur ON r.role_id = ur.role_id
         WHERE ur.user_id = :userId
 """, nativeQuery = true)
     List<Role> findByUserId(@Param("userId") Long userId);
