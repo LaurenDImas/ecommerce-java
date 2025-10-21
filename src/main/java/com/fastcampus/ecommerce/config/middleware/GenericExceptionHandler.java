@@ -116,4 +116,15 @@ public class GenericExceptionHandler{
                 .build();
 
     }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public @ResponseBody ErrorResponse handleForbiddenException(HttpServletRequest req, Exception exception){
+        return ErrorResponse.builder()
+                .code(HttpStatus.FORBIDDEN.value())
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+    }
 }
