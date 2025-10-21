@@ -17,13 +17,14 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserDetailsImpl implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        System.out.println(username);
         User user = userRepository.findByKeyword(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         List<Role> roles = roleRepository.findByUserId(user.getUserId());

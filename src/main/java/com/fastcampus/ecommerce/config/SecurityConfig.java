@@ -1,8 +1,7 @@
 package com.fastcampus.ecommerce.config;
 
-import com.fastcampus.ecommerce.service.UserDetailsImpl;
+import com.fastcampus.ecommerce.service.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserDetailsImpl userDetailsService;
+    private final UserDetailsServiceImpl userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {

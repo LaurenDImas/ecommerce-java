@@ -89,7 +89,7 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         if (request.getCurrentPassword() != null && request.getNewPassword() != null) {
-            if(!passwordEncoder.matches(request.getCurrentPassword(), request.getNewPassword())){
+            if(!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())){
                 throw new BadRequestException("Password and new password do not match");
             }
 

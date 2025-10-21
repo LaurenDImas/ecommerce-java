@@ -1,8 +1,10 @@
 package com.fastcampus.ecommerce.controller;
 
+import com.fastcampus.ecommerce.common.SecurityUtils;
 import com.fastcampus.ecommerce.model.PaginatedProductResponse;
 import com.fastcampus.ecommerce.model.ProductRequest;
 import com.fastcampus.ecommerce.model.ProductResponse;
+import com.fastcampus.ecommerce.model.UserInfo;
 import com.fastcampus.ecommerce.service.ProductService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -18,10 +20,11 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/products")
-@SecurityRequirement(name = "bearer")
+@SecurityRequirement(name = "Bearer")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -62,6 +65,8 @@ public class ProductController {
 
     @PostMapping("/")
     public ResponseEntity<ProductResponse> createProduct(@RequestBody @Valid ProductRequest request){
+        UserInfo userInfo = SecurityUtils.getCurrentUser();
+        request.setUser(userInfo.getUser());
         ProductResponse productResponse = productService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(productResponse);
     }
