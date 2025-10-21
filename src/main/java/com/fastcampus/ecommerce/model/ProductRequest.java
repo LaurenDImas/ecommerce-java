@@ -1,6 +1,7 @@
 package com.fastcampus.ecommerce.model;
 
 import com.fastcampus.ecommerce.entity.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,5 +40,6 @@ public class ProductRequest {
     @NotEmpty(message = "Kategori tidak boleh kosong")
     private List<Long> categoryIds;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY) // akan diabaikan saat request masuk
     private User user;
 }
