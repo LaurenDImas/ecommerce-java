@@ -42,10 +42,10 @@ public class UserAddress {
     private String postalCode;
 
     @Column(nullable = false)
-    private Boolean country;
+    private String country;
 
     @Column(name = "is_default", nullable = false)
-    private String isDefault;
+    private Boolean isDefault;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

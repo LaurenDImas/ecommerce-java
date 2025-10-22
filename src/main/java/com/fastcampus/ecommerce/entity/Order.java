@@ -24,7 +24,7 @@ public class Order {
     private Long orderId;
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private Long userId;
 
     @Column(nullable = false, precision =  10, scale = 2)
     private BigDecimal subtotal;
@@ -38,6 +38,7 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+//    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private String status;
 
