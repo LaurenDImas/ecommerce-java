@@ -24,13 +24,13 @@ public class OrderItem {
     private Long orderItemId;
 
     @Column(name = "order_id", nullable = false)
-    private String orderId;
+    private Long orderId;
 
     @Column(name = "product_id", nullable = false)
-    private String productId;
+    private Long productId;
 
     @Column(name = "user_address_id", nullable = false)
-    private String userAddressId;
+    private Long userAddressId;
 
     @Column(nullable = false)
     private Integer quantity;
