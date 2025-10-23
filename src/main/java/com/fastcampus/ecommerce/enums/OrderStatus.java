@@ -7,7 +7,9 @@ import lombok.Getter;
 public enum OrderStatus {
     PENDING ("PENDING",  "Menunggu diproses"),
     SHIPPING ("SHIPPING",  "Pengiriman"),
-    CANCELED  ("CANCELED",   "Ditolak/dibatalkan");
+    CANCELED  ("CANCELED",   "Ditolak/dibatalkan"),
+    PAID ("PAID", "Sudah dibayar"),
+    PAYMENT_FAILED  ("PAYMENT_FAILED",   "Pembayaran gagal");
 
     private final String code;
     private final String description;
