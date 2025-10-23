@@ -27,9 +27,7 @@ public class OrderController {
     @PostMapping("/checkout")
     public ResponseEntity<OrderResponse> checkout(@Valid @RequestBody CheckoutRequest checkoutRequest){
         checkoutRequest.setUserId(SecurityUtils.getCurrentUser().getUser().getUserId());
-        Order order = orderService.checkout(checkoutRequest);
-        OrderResponse orderResponse = OrderResponse.fromOrder(order);
-        return ResponseEntity.ok(orderResponse);
+        return ResponseEntity.ok(orderService.checkout(checkoutRequest));
     }
 
     @PostMapping("/{orderId}")
