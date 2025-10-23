@@ -45,6 +45,9 @@ public class Order {
     @Column(name = "order_date")
     private LocalDateTime orderDate;
 
+    @Column(name = "awb_number")
+    private String awbNumber;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false , updatable = false)
     private LocalDateTime createdAt;

@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 public enum OrderStatus {
     PENDING ("PENDING",  "Menunggu diproses"),
+    SHIPPING ("SHIPPING",  "Pengiriman"),
     CANCELED  ("CANCELED",   "Ditolak/dibatalkan");
 
     private final String code;
