@@ -1,10 +1,13 @@
 package com.fastcampus.ecommerce.service;
 
+import com.fastcampus.ecommerce.common.OrderStateTransition;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.*;
-import com.fastcampus.ecommerce.enums.OrderStatus;
 import com.fastcampus.ecommerce.model.*;
 import com.fastcampus.ecommerce.repository.*;
+import com.xendit.exception.XenditException;
+import com.xendit.model.Invoice;
+import com.xendit.model.XenditError;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order newOrder = Order.builder()
                 .userId(checkoutRequest.getUserId())
-                .status(OrderStatus.PENDING.getCode())
+                .status(OrderStatus.PENDING)
                 .orderDate(LocalDateTime.now())
                 .totalAmount(BigDecimal.ZERO)
                 .taxFee(BigDecimal.ZERO)
@@ -117,7 +120,7 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.save(savedOrder);
         }catch (Exception e){
             log.error("Payment error :" + e.getMessage());
-            savedOrder.setStatus(OrderStatus.PAYMENT_FAILED.getCode());
+            savedOrder.setStatus(OrderStatus.PAYMENT_FAILED);
 
             orderRepository.save(savedOrder);
             return OrderResponse.fromOrder(savedOrder);
@@ -139,7 +142,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> findOrdersByStatus(String status) {
+    public List<Order> findOrdersByStatus(OrderStatus status) {
         return orderRepository.findByStatus(status);
     }
 
@@ -149,12 +152,13 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (!OrderStatus.PENDING.getCode().equals(order.getStatus())) {
+        if (!OrderStateTransition.isValidTransition(order.getStatus(), OrderStatus.CANCELLED)) {
             throw new IllegalStateException("Order status must be PENDING");
         }
 
-        order.setStatus(OrderStatus.CANCELED.getCode());
+        order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
+        cancelXenditInvoice(order);
     }
 
     @Override
@@ -191,16 +195,37 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void updateOrderStatus(Long orderId, String status) {
+    @Transactional
+    public void updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
+        if (!OrderStateTransition.isValidTransition(order.getStatus(), status)) {
+            throw new IllegalStateException("Order with current status "+ order.getStatus() +" is not valid");
+        }
+
         order.setStatus(status);
         orderRepository.save(order);
+        if (status.equals(OrderStatus.CANCELLED)) {
+            cancelXenditInvoice(order);
+        }
     }
 
     @Override
     public Double calculateOrderTotal(Long orderId) {
         return orderItemRepository.calculateTotalPrice(orderId);
     }
+
+    private void cancelXenditInvoice(Order order) {
+        try {
+            Invoice invoice = Invoice.expire(order.getXenditInvoiceId());
+            order.setXenditPaymentStatus(invoice.getStatus());
+            orderRepository.save(order);
+        }catch (XenditException error){
+            log.error("Xendit error :" + error.getMessage());
+        }
+    }
+
+//    public void
+//    public void * * * * *
 }

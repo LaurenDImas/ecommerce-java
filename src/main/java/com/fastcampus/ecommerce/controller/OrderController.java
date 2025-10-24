@@ -1,11 +1,13 @@
 package com.fastcampus.ecommerce.controller;
 
 import com.fastcampus.ecommerce.common.SecurityUtils;
+import com.fastcampus.ecommerce.common.errors.BadRequestException;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.Order;
 import com.fastcampus.ecommerce.model.CheckoutRequest;
 import com.fastcampus.ecommerce.model.OrderItemResponse;
 import com.fastcampus.ecommerce.model.OrderResponse;
+import com.fastcampus.ecommerce.model.OrderStatus;
 import com.fastcampus.ecommerce.service.OrderService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -30,7 +32,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.checkout(checkoutRequest));
     }
 
-    @PostMapping("/{orderId}")
+    @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> findOrderById(@PathVariable(name = "orderId") Long orderId){
 
         Order order = orderService.findByOrderId(orderId).orElse(null);
@@ -65,7 +67,14 @@ public class OrderController {
     @PutMapping("/{orderId}/status")
     public ResponseEntity<Void> updateOrderStatus(@PathVariable Long orderId,
                                                   @RequestParam String newStatus){
-        orderService.updateOrderStatus(orderId, newStatus);
+
+        OrderStatus status;
+        try {
+            status = OrderStatus.valueOf(newStatus);
+        }catch (IllegalArgumentException e){
+            throw new BadRequestException("unrecognize status: "+ newStatus);
+        }
+        orderService.updateOrderStatus(orderId, status);
         return ResponseEntity.ok().build();
     }
 

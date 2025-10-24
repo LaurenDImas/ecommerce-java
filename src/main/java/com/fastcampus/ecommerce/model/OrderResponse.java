@@ -26,7 +26,7 @@ public class OrderResponse implements Serializable {
     private BigDecimal shippingFee;
     private BigDecimal taxFee;
     private BigDecimal totalAmount;
-    private String status;
+    private OrderStatus status;
     private LocalDateTime orderDate;
     private String xenditInvoiceId;
     private String xenditInvoiceStatus;
