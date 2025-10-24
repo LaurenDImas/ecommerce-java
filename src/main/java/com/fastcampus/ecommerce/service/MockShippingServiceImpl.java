@@ -1,10 +1,11 @@
 package com.fastcampus.ecommerce.service;
 
+import com.fastcampus.ecommerce.common.OrderStateTransition;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.Order;
 import com.fastcampus.ecommerce.entity.OrderItem;
 import com.fastcampus.ecommerce.entity.Product;
-import com.fastcampus.ecommerce.enums.OrderStatus;
+import com.fastcampus.ecommerce.model.OrderStatus;
 import com.fastcampus.ecommerce.model.ShippingOrderRequest;
 import com.fastcampus.ecommerce.model.ShippingOrderResponse;
 import com.fastcampus.ecommerce.model.ShippingRateRequest;
@@ -52,7 +53,10 @@ public class MockShippingServiceImpl implements ShippingService {
         Order order = orderRepository.findById(request.getOrderId())
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        order.setStatus(OrderStatus.SHIPPING.getCode());
+        if(!OrderStateTransition.isValidTransition(order.getStatus(), OrderStatus.SHIPPED)){
+            throw new IllegalStateException("Order state transition is invalid");
+        }
+        order.setStatus(OrderStatus.SHIPPED);
         order.setAwbNumber(awbNumber);
         orderRepository.save(order);
 

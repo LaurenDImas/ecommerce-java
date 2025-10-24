@@ -3,7 +3,7 @@ package com.fastcampus.ecommerce.service;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.Order;
 import com.fastcampus.ecommerce.entity.User;
-import com.fastcampus.ecommerce.enums.OrderStatus;
+import com.fastcampus.ecommerce.model.OrderStatus;
 import com.fastcampus.ecommerce.model.PaymentNotification;
 import com.fastcampus.ecommerce.model.PaymentResponse;
 import com.fastcampus.ecommerce.repository.OrderRepository;
@@ -89,16 +89,16 @@ public class XenditPaymentServiceImpl implements PaymentService {
 
         switch (status){
             case "PAID":
-                order.setStatus(OrderStatus.PAID.getCode());
+                order.setStatus(OrderStatus.PAID);
                 break;
             case "EXPIRED":
-                order.setStatus(OrderStatus.CANCELED.getCode());
+                order.setStatus(OrderStatus.CANCELLED);
                 break;
             case "FAILED":
-                order.setStatus(OrderStatus.PAYMENT_FAILED.getCode());
+                order.setStatus(OrderStatus.PAYMENT_FAILED);
                 break;
             case "PENDING":
-                order.setStatus(OrderStatus.PENDING.getCode());
+                order.setStatus(OrderStatus.PENDING);
                 break;
             default:
         }
