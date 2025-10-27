@@ -11,6 +11,7 @@ import com.xendit.model.XenditError;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -226,6 +227,17 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-//    public void
-//    public void * * * * *
+
+    @Scheduled(cron = "0 * * * * *")
+    @Transactional
+    public void cancelUpdateOrders(){
+        LocalDateTime cancelThreshold =  LocalDateTime.now().minusDays(1);
+        List<Order> unpaidOrders = orderRepository.findByStatusAndOrderDateBefore(OrderStatus.PENDING, cancelThreshold);
+        unpaidOrders.forEach(order -> {
+            order.setStatus(OrderStatus.CANCELLED);
+            orderRepository.save(order);
+
+            cancelXenditInvoice(order);
+        });
+    }
 }
