@@ -23,4 +23,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByUserIdAndDateRange(Long userId, LocalDateTime startDate, LocalDateTime endDate);
 
     Optional<Order> findByXenditInvoiceId(String id);
+
+    List<Order> findByStatusAndOrderDateBefore(OrderStatus status, LocalDateTime date);
 }
