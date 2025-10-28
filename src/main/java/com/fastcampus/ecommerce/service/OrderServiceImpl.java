@@ -1,6 +1,7 @@
 package com.fastcampus.ecommerce.service;
 
 import com.fastcampus.ecommerce.common.OrderStateTransition;
+import com.fastcampus.ecommerce.common.errors.InventoryException;
 import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.*;
 import com.fastcampus.ecommerce.model.*;
@@ -11,6 +12,8 @@ import com.xendit.model.XenditError;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final ShippingService shippingService;
     private final PaymentService paymentService;
+    private final InventoryService inventoryService;
 
     private final BigDecimal TAX_RATE = BigDecimal.valueOf(0.03);
 
@@ -45,6 +49,16 @@ public class OrderServiceImpl implements OrderService {
                 checkoutRequest.getSelectedCartItemIds());
         if(selectedItems.isEmpty()) {
             throw new ResourceNotFoundException("No cart item selected");
+        }
+
+        Map<Long, Integer> productQuantities = selectedItems.stream()
+                .collect(Collectors.toMap(
+                        CartItem::getProductId,
+                        CartItem::getQuantity
+                ));
+
+        if (!inventoryService.checkAndLockInventory(productQuantities)) {
+            throw new InventoryException("Insufficient inventory for one or more products");
         }
 
         UserAddress shippingAddress = userAddressRepository.findById(checkoutRequest.getUserAddressId())
@@ -119,6 +133,7 @@ public class OrderServiceImpl implements OrderService {
             savedOrder.setXenditPaymentStatus(paymentResponse.getXenditInvoiceStatus());
             paymentUrl = paymentResponse.getXenditPaymentUrl();
             orderRepository.save(savedOrder);
+            inventoryService.decreaseQuantity(productQuantities);
         }catch (Exception e){
             log.error("Payment error :" + e.getMessage());
             savedOrder.setStatus(OrderStatus.PAYMENT_FAILED);
@@ -143,6 +158,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    public Page<OrderResponse> findOrdersByUserIdAndPageable(Long userId, Pageable pageable) {
+        return orderRepository.findByUserIdByPageable(userId, pageable)
+                .map(OrderResponse::fromOrder);
+    }
+
+    @Override
     public List<Order> findOrdersByStatus(OrderStatus status) {
         return orderRepository.findByStatus(status);
     }
@@ -157,9 +178,14 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Order status must be PENDING");
         }
 
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        Map<Long, Integer> productQuantities = orderItems.stream()
+                        .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+
         order.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order);
         cancelXenditInvoice(order);
+        inventoryService.increaseQuantity(productQuantities);
     }
 
     @Override
@@ -205,16 +231,33 @@ public class OrderServiceImpl implements OrderService {
             throw new IllegalStateException("Order with current status "+ order.getStatus() +" is not valid");
         }
 
+        List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+        Map<Long, Integer> productQuantities = orderItems.stream()
+                .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+
         order.setStatus(status);
         orderRepository.save(order);
-        if (status.equals(OrderStatus.CANCELLED)) {
+        if (order.getStatus().equals(OrderStatus.CANCELLED)) {
             cancelXenditInvoice(order);
+            inventoryService.increaseQuantity(productQuantities);
         }
     }
 
     @Override
     public Double calculateOrderTotal(Long orderId) {
         return orderItemRepository.calculateTotalPrice(orderId);
+    }
+
+    @Override
+    public PaginatedOrderResponse convertOrderPage(Page<OrderResponse> orderResponses) {
+        return PaginatedOrderResponse.builder()
+                .data(orderResponses.getContent())
+                .pageNo(orderResponses.getNumber())
+                .pageSize(orderResponses.getSize())
+                .totalElements(orderResponses.getTotalElements())
+                .totalPages(orderResponses.getTotalPages())
+                .last(orderResponses.isLast())
+                .build();
     }
 
     private void cancelXenditInvoice(Order order) {
@@ -227,7 +270,6 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-
     @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void cancelUpdateOrders(){
@@ -236,8 +278,12 @@ public class OrderServiceImpl implements OrderService {
         unpaidOrders.forEach(order -> {
             order.setStatus(OrderStatus.CANCELLED);
             orderRepository.save(order);
-
             cancelXenditInvoice(order);
+            Map<Long, Integer> productQuantities = orderItemRepository.findByOrderId(order.getOrderId())
+                    .stream()
+                    .collect(Collectors.toMap(OrderItem::getProductId, OrderItem::getQuantity));
+            inventoryService.increaseQuantity(productQuantities);
         });
+
     }
 }
