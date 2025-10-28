@@ -1,9 +1,8 @@
-package com.fastcampus.ecommerce.controller;
+package com.fastcampus.ecommerce.controller.admin;
 
 import com.fastcampus.ecommerce.common.PageUtil;
 import com.fastcampus.ecommerce.common.SecurityUtils;
 import com.fastcampus.ecommerce.common.errors.BadRequestException;
-import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.Order;
 import com.fastcampus.ecommerce.model.*;
 import com.fastcampus.ecommerce.service.OrderService;
@@ -23,27 +22,17 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/orders")
+@RequestMapping("/admin/orders")
 @SecurityRequirement(name = "Bearer")
-public class OrderController {
+public class AdminOrderController {
 
     private final OrderService orderService;
-    private final UserService userService;
-
-    @PostMapping("/checkout")
-    public ResponseEntity<OrderResponse> checkout(@Valid @RequestBody CheckoutRequest checkoutRequest){
-        checkoutRequest.setUserId(SecurityUtils.getCurrentUser().getUser().getUserId());
-        return ResponseEntity.ok(orderService.checkout(checkoutRequest));
-    }
 
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderResponse> findOrderById(@PathVariable(name = "orderId") Long orderId){
         Order order = orderService.findByOrderId(orderId).orElse(null);
         if (order == null) {
-            return  ResponseEntity.notFound().build();
-        }
-        if (!order.getUserId().equals(SecurityUtils.getCurrentUser().getUser().getUserId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(OrderResponse.builder().build());
+            return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(OrderResponse.fromOrder(order));
     }
@@ -68,31 +57,5 @@ public class OrderController {
     public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId){
         orderService.cancelOrder(orderId);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/{orderId}/items")
-    public ResponseEntity<List<OrderItemResponse>> findOrderItems(@PathVariable Long orderId){
-        List<OrderItemResponse> orderItemResponses = orderService.findOrderItemsByOrderId(orderId);
-        return ResponseEntity.ok(orderItemResponses);
-    }
-
-    @PutMapping("/{orderId}/status")
-    public ResponseEntity<Void> updateOrderStatus(@PathVariable Long orderId,
-                                                  @RequestParam String newStatus){
-
-        OrderStatus status;
-        try {
-            status = OrderStatus.valueOf(newStatus);
-        }catch (IllegalArgumentException e){
-            throw new BadRequestException("unrecognize status: "+ newStatus);
-        }
-        orderService.updateOrderStatus(orderId, status);
-        return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/{orderId}/total")
-    public ResponseEntity<Double> calculateOrderTotal(@PathVariable Long orderId){
-        double orderTotal = orderService.calculateOrderTotal(orderId);
-        return ResponseEntity.ok(orderTotal);
     }
 }

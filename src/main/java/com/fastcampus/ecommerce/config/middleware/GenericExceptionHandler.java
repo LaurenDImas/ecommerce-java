@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -39,9 +40,9 @@ public class GenericExceptionHandler{
                 .build();
     }
 
-    @ExceptionHandler(BadRequestException.class)
+    @ExceptionHandler({BadRequestException.class, InventoryException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public @ResponseBody ErrorResponse handleBadRequestException(HttpServletRequest req, BadRequestException exception) {
+    public @ResponseBody ErrorResponse handleBadRequestException(HttpServletRequest req, Exception exception) {
         return ErrorResponse.builder()
                 .code(HttpStatus.BAD_REQUEST.value())
                 .message(exception.getMessage())
@@ -57,10 +58,12 @@ public class GenericExceptionHandler{
             Exception exception){
         log.error("Terjadi error, status code: {} error message: {}", HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
         if (exception instanceof AccessDeniedException ||
+            exception instanceof AuthorizationDeniedException ||
             exception instanceof SignatureException ||
             exception instanceof ExpiredJwtException ||
             exception instanceof AuthenticationException) {
             resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            log.error("Terjadi error, status code: {} error message: {}", HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
             return ErrorResponse.builder()
                     .code(HttpStatus.FORBIDDEN.value())
                     .message(exception.getMessage())
