@@ -3,6 +3,7 @@ package com.fastcampus.ecommerce.config.middleware;
 import com.fastcampus.ecommerce.common.errors.*;
 import com.fastcampus.ecommerce.model.ErrorResponse;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -125,6 +126,17 @@ public class GenericExceptionHandler{
     public @ResponseBody ErrorResponse handleForbiddenException(HttpServletRequest req, Exception exception){
         return ErrorResponse.builder()
                 .code(HttpStatus.FORBIDDEN.value())
+                .message(exception.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+    public @ResponseBody ErrorResponse handleRateLimitException(HttpServletRequest req, Exception exception){
+        return ErrorResponse.builder()
+                .code(HttpStatus.TOO_MANY_REQUESTS.value())
                 .message(exception.getMessage())
                 .timestamp(LocalDateTime.now())
                 .build();

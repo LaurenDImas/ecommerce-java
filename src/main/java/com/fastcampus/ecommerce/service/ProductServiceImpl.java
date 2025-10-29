@@ -28,6 +28,10 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final ProductCategoryRepository productCategoryRepository;
 
+    private final String PRODUCT_CACHE_KEY = "products";
+    private final CacheService cacheService;
+    private final RateLimitingService rateLimitingService;
+
     @Override
     public List<ProductResponse> findAll() {
         return productRepository.findAll().stream().map(
@@ -40,12 +44,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductResponse> findByPage(Pageable pageable) {
-        return productRepository.findByPageable(pageable).map(
+        return rateLimitingService.executeWithRateLimit("product_listing", () -> productRepository.findByPageable(pageable).map(
                 product -> {
                     List<CategoryResponse> productCategories = getProductCategories(product.getProductId());
                     return ProductResponse.fromProductAndCategories(product, productCategories);
                 }
-        );
+        ));
     }
 
     @Override
@@ -61,11 +65,19 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponse findById(Long productId) {
+        String cacheKey = PRODUCT_CACHE_KEY + productId;
+        Optional<ProductResponse> cacheProduct = cacheService.get(cacheKey, ProductResponse.class);
+        if (cacheProduct.isPresent()) {
+            return cacheProduct.get();
+        }
+
         Product existingProduct = productRepository.findById(productId).orElseThrow(
                 () -> new ResourceNotFoundException("Product not found for id : " + productId)
         );
         List<CategoryResponse> productCategories = getProductCategories(productId);
-        return ProductResponse.fromProductAndCategories(existingProduct, productCategories);
+        ProductResponse productResponse = ProductResponse.fromProductAndCategories(existingProduct, productCategories);
+        cacheService.put(cacheKey, productResponse);
+        return productResponse;
     }
 
     @Override
@@ -99,7 +111,10 @@ public class ProductServiceImpl implements ProductService {
                 CategoryResponse::fromCategory
         ).toList();
 
-        return ProductResponse.fromProductAndCategories(createdProduct, categoryResponseList);
+        String cacheKey = PRODUCT_CACHE_KEY + createdProduct.getProductId();
+        ProductResponse productResponse = ProductResponse.fromProductAndCategories(createdProduct, categoryResponseList);
+        cacheService.put(cacheKey, productResponse);
+        return productResponse;
     }
 
     @Override
@@ -135,6 +150,9 @@ public class ProductServiceImpl implements ProductService {
         List<CategoryResponse> categoryResponseList = categories.stream().map(
                 CategoryResponse::fromCategory
         ).toList();
+
+        String cacheKey = PRODUCT_CACHE_KEY + productId;
+        cacheService.evict(cacheKey);
 
         return ProductResponse.fromProductAndCategories(existingProduct, categoryResponseList);
     }
