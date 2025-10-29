@@ -5,6 +5,7 @@ import com.fastcampus.ecommerce.entity.User;
 import com.fastcampus.ecommerce.model.UserInfo;
 import com.fastcampus.ecommerce.repository.UserRepository;
 import com.fastcampus.ecommerce.repository.RoleRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,26 +13,47 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserDetailsServiceImpl implements UserDetailsService {
 
+    private final String USER_CACHE_KEY = "cache:user:";
+    private final String USER_ROLES_CACHE_KEY = "cache:user:role:";
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final CacheService cacheService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println(username);
+        String userCacheKey = USER_CACHE_KEY + username;
+        String rolesCacheKey = USER_ROLES_CACHE_KEY + username;
+
+        Optional<User> userOpt = cacheService.get(userCacheKey, User.class);
+        Optional<List<Role>> rolesOpt = cacheService.get(rolesCacheKey, new TypeReference<List<Role>>() {});
+
+        if (userOpt.isPresent() && rolesOpt.isPresent()) {
+            return UserInfo.builder()
+                    .roles(rolesOpt.get())
+                    .user(userOpt.get())
+                    .build();
+        }
+
         User user = userRepository.findByKeyword(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
         List<Role> roles = roleRepository.findByUserId(user.getUserId());
 
-        return UserInfo.builder()
+        UserInfo userInfo = UserInfo.builder()
                 .roles(roles)
                 .user(user)
                 .build();
+
+        cacheService.put(userCacheKey, user);
+        cacheService.put(rolesCacheKey, roles);
+        return userInfo;
     }
 }

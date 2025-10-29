@@ -26,6 +26,8 @@ public class XenditPaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;;
     private final OrderRepository orderRepository;
 
+    private final EmailService emailService;
+
     @Override
     public PaymentResponse create(Order order) {
         User user = userRepository.findById(order.getUserId())
@@ -90,6 +92,7 @@ public class XenditPaymentServiceImpl implements PaymentService {
         switch (status){
             case "PAID":
                 order.setStatus(OrderStatus.PAID);
+                emailService.sendPaymentSuccess(order);
                 break;
             case "EXPIRED":
                 order.setStatus(OrderStatus.CANCELLED);

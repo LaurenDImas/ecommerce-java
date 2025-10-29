@@ -30,6 +30,10 @@ public class UserServiceImpl implements UserService {
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final String USER_CACHE_KEY = "cache:user:";
+    private final String USER_ROLES_CACHE_KEY = "cache:user:role:";
+    private final CacheService cacheService;
+
     @Override
     @Transactional
     public UserResponse register(UserRegisterRequest registerRequest) {
@@ -110,8 +114,12 @@ public class UserServiceImpl implements UserService {
             }
             user.setEmail(request.getEmail());
         }
+        String userKey = USER_CACHE_KEY + user.getUsername();
+        String roleKey = USER_ROLES_CACHE_KEY + user.getUsername();
         userRepository.save(user);
         List<Role> roles = roleRepository.findByUserId(id);
+        cacheService.evict(userKey);
+        cacheService.evict(roleKey);
         return UserResponse.fromUserAndRoles(user, roles);
     }
 
