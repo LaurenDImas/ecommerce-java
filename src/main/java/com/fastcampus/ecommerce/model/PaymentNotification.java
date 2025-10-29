@@ -1,19 +1,26 @@
 package com.fastcampus.ecommerce.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PaymentNotification {
     private String id;
     private BigDecimal amount;
     private String status;
     private Instant createdAt;
+    @JsonProperty(value = "is_high")
     private boolean isHigh;
     private Instant paidAt;
     private Instant updated;
