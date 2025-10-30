@@ -1,5 +1,6 @@
 package com.fastcampus.ecommerce.service;
 
+import com.fastcampus.ecommerce.common.errors.ResourceNotFoundException;
 import com.fastcampus.ecommerce.entity.*;
 import com.fastcampus.ecommerce.model.*;
 import com.fastcampus.ecommerce.repository.*;
@@ -11,12 +12,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -79,6 +77,12 @@ class OrderServiceImplTest {
         sellerAddress = new UserAddress();
         sellerAddress.setUserAddressId(2L);
         sellerAddress.setUserId(seller.getUserId());
+    }
+
+    @Test
+    void testCheckout_WhenCartIsEmpty(){
+        when(cartItemRepository.findAllById(anyList())).thenReturn(Collections.emptyList());
+        assertThrows(ResourceNotFoundException.class, () -> orderService.checkout(checkoutRequest));
     }
 
     @Test
