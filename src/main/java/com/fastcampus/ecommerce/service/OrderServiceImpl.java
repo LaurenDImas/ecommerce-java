@@ -51,6 +51,9 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("No cart item selected");
         }
 
+        UserAddress shippingAddress = userAddressRepository.findById(checkoutRequest.getUserAddressId())
+                .orElseThrow(() -> new ResourceNotFoundException("User address not found"));
+
         Map<Long, Integer> productQuantities = selectedItems.stream()
                 .collect(Collectors.toMap(
                         CartItem::getProductId,
@@ -60,9 +63,6 @@ public class OrderServiceImpl implements OrderService {
         if (!inventoryService.checkAndLockInventory(productQuantities)) {
             throw new InventoryException("Insufficient inventory for one or more products");
         }
-
-        UserAddress shippingAddress = userAddressRepository.findById(checkoutRequest.getUserAddressId())
-                .orElseThrow(() -> new ResourceNotFoundException("User address not found"));
 
         Order newOrder = Order.builder()
                 .userId(checkoutRequest.getUserId())

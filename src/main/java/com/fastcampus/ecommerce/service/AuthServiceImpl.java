@@ -27,7 +27,7 @@ public class AuthServiceImpl implements AuthService {
                     new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
 
             UserInfo user = (UserInfo) authentication.getPrincipal();
-            emailService.sendPaymentSuccess(orderRepository.findById(15L).orElse(null));
+//            emailService.sendPaymentSuccess(orderRepository.findById(15L).orElse(null));
             return user;
         }catch (Exception e) {
             log.error("Authentication failed", e);
