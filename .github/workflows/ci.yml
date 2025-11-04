@@ -22,7 +22,7 @@ jobs:
       - name: Build with maven
         run: mvn clean install
 
-      - name: Run  tests
+      - name: Run tests
         run: mvn test
 
       - name: Upload coverge report
