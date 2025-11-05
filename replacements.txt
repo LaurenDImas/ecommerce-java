@@ -1,0 +1,4 @@
+# Ganti nilai API key yang bocor menjadi REDACTED
+==>REDACTED
+# Pastikan seluruh baris mailgun.apiKey diset ke ENV agar aman
+regex:^mailgun\.apiKey=.*>mailgun.apiKey=${MAILGUN_API_KEY:}
