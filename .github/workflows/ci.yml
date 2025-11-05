@@ -26,8 +26,8 @@ jobs:
       - name: Build (skip tests)
         run: mvn -B -DskipTests clean install
 
-#      - name: Run tests
-#        run: mvn -B test
+      - name: Run tests
+        run: mvn -B test
 
       - name: Upload coverage report
         if: ${{ hashFiles('**/pom.xml') != '' }}
